@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-29 14:53:14 +08:00
+ * @Date:       2013-08-30 05:06:24 +08:00
  * @File:       TextOfDatabase.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -26,6 +26,11 @@ class Todb
   */
   private $_is_connected = FALSE;
   /**
+  * @info   Database locked?
+  * @type   bool
+  */
+  private $_is_locked = NULL;
+  /**
   * @info   Show errors?
   * @type   bool
   */
@@ -46,9 +51,10 @@ class Todb
   * @info   Constructor
   * @return {Todb}
   */
-  //public function __construct()
-  //{
-  //}
+  public function __construct()
+  {
+    $this->_error_reporting_level = @error_reporting();
+  }
 
   /**
   * @info   Open debug mode?
@@ -60,9 +66,6 @@ class Todb
     $on = !!$on;
     $this->_debug = $on;
     if ( $on ) {
-      if ( is_null($this->_error_reporting_level) ) {
-        $this->_error_reporting_level = @error_reporting();
-      }
       @error_reporting(E_ALL ^ E_WARNING ^ E_NOTICE);
     } else {
       if ( !is_null($this->_error_reporting_level) ) {
@@ -95,10 +98,10 @@ class Todb
   public function Disconnect()
   {
     $this->_NeedConnected();
-    unset($this->_db_path);
     $this->_cache = array();
     $this->_tables = array();
     $this->_is_connected = FALSE;
+    unset($this->_db_path, $this->_is_locked);
   }
   /**
   * @info   Is connected to the database?
@@ -108,6 +111,36 @@ class Todb
   public function IsConnected()
   {
     return $this->_is_connected;
+  }
+  /**
+  * @info   Is database locked?
+  * @param  void
+  * @return {Boolean}
+  */
+  public function IsLocked()
+  {
+    $this->_NeedConnected();
+    return $this->_is_locked;
+  }
+  /**
+  * @info   Lock database
+  *         Return TRUE for success, or FALSE for failure
+  * @param  void
+  * @return {Boolean}
+  */
+  public function Lock()
+  {
+    $this->_NeedConnected();
+  }
+  /**
+  * @info   Unlock database
+  *         Return TRUE for success, or FALSE for failure
+  * @param  void
+  * @return {Boolean}
+  */
+  public function Unlock()
+  {
+    $this->_NeedConnected();
   }
   /**
   * @info   Return names of all table in the database if $tname isn't {String}
@@ -142,7 +175,7 @@ class Todb
   }
   /**
   * @info   Create table
-  *         Return true for success, or FALSE for failure
+  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of table
   * @param  {Array}   $tdata: headers and records
   * @return {Boolean}
@@ -162,7 +195,7 @@ class Todb
   }
   /**
   * @info   Delete table
-  *         Return true for success, or FALSE for failure
+  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of table
   * @return {Boolean}
   */
@@ -530,7 +563,7 @@ class Todb
   }
   /**
   * @info   Append records directly to a table file
-  *         Return true for success, or FALSE for failure
+  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $record: one record to append
   * @return {Boolean}
@@ -552,7 +585,7 @@ class Todb
   }
   /**
   * @info   Write a working table to the database.
-  *         Return true for success, or FALSE for failure
+  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of specified table
   * @return {Boolean}
   */
