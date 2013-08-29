@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 05:06:24 +08:00
+ * @Date:       2013-08-30 05:54:32 +08:00
  * @File:       TextOfDatabase.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -562,18 +562,21 @@ class Todb
     $this->_tables[$tname . 'row'] = $records;
   }
   /**
-  * @info   Append records directly to a table file
+  * @info   Append record(s) directly to a table file
   *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of specified table
-  * @param  {Array}   $record: one record to append
+  * @param  {Array}   $records: record(s) to append
+  * @param  {Boolean} $toRecords: not just one record?
   * @return {Boolean}
   */
-  public function Append($tname, $record)
+  public function Append($tname, $records, $toRecords = FALSE)
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_SortRecordValues($tname, $record, TRUE);
-    $records = array($record);
+    if ( $toRecords ) {
+      $records = array($records);
+    }
     $this->_NeedValidTable(array(
       'headers' => $this->GetHeaders($tname, TRUE),
       'records' => $records
