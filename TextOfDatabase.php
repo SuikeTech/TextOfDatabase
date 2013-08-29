@@ -971,16 +971,19 @@ EOT;
         $line .= PHP_EOL;
       }
       if ( FALSE === @fwrite($fh_row, $line) ) {
+        @flock($fh_row, LOCK_UN);
+        @fclose($fh_row);
+        @ignore_user_abort(FALSE);
         return FALSE;
       }
     }
     @flock($fh_row, LOCK_UN);
     @fclose($fh_row);
+    @ignore_user_abort(FALSE);
     if ( $toOverwrite ) {
       $this->_cache[$tname . '.col'] = $tdata['headers'];
       $this->_cache[$tname . '.row'] = $tdata['records'];
     }
-    @ignore_user_abort(FALSE);
     return TRUE;
   }
   private function _UnlinkTable($tname)
