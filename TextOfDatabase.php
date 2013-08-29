@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 05:54:32 +08:00
+ * @Date:       2013-08-30 06:20:56 +08:00
  * @File:       TextOfDatabase.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -219,7 +219,9 @@ class Todb
       $this->_NeedFragmentLoaded($tname, TRUE);
       return $this->_tables[$tname . '.col'];
     }
-    $this->_ReadHeaders($tname);
+    if ( FALSE === $this->_ReadHeaders($tname) ) {
+      $this->_Error('FILE_ERROR', 'Table not found or broken');
+    }
     return $this->_cache[$tname . '.col'];
   }
   /**
@@ -516,7 +518,7 @@ class Todb
     $this->_NeedTable($tname, FALSE);
     $this->_SortRecordValues($tname, $record, FALSE);
     $this->_NeedValidTable(array(
-      'headers' => $this->GetHeaders($tname, FALSE),
+      'headers' => $this->_tables[$tname . '.col'],
       'records' => array($record)
     ));
     $this->_tables[$tname . '.row'][] = $record;
@@ -536,7 +538,7 @@ class Todb
       $this->_SortRecordValues($tname, $record, FALSE);
     }
     $this->_NeedValidTable(array(
-      'headers' => $this->GetHeaders($tname, FALSE),
+      'headers' => $this->_tables[$tname . '.col'],
       'records' => $records
     ));
     call_user_func_array('array_push', array(
@@ -556,7 +558,7 @@ class Todb
     $this->_NeedValidName($tname);
     $this->_NeedFragmentLoaded($tname, TRUE);
     $this->_NeedValidTable(array(
-      'headers' => $this->GetHeaders($tname, FALSE),
+      'headers' => $this->_tables[$tname . '.col'],
       'records' => $records
     ));
     $this->_tables[$tname . 'row'] = $records;
@@ -573,16 +575,20 @@ class Todb
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
+    if ( FALSE === $this->_ReadHeaders($tname) ) {
+      $this->_Error('FILE_ERROR', 'Table not found or broken');
+    }
     $this->_SortRecordValues($tname, $record, TRUE);
     if ( $toRecords ) {
       $records = array($records);
     }
+    $headers = $this->_cache[$tname . '.col'];
     $this->_NeedValidTable(array(
-      'headers' => $this->GetHeaders($tname, TRUE),
+      'headers' => $headers,
       'records' => $records
     ));
     return $this->_WriteTable($tname, array(
-      'headers' => $this->GetHeaders($tname, TRUE),
+      'headers' => $headers,
       'records' => $records
     ), TRUE, FALSE);
   }
@@ -676,7 +682,7 @@ EOT;
       $this->_tables[$tname . '.col'] = $this->_cache[$tname . '.col'];
     }
     if ( !$headers_or_records and !is_array($this->_tables[$tname . '.row']) ) {
-      if ( FALSE === $this->_ReadRecords($tname) ) {
+      if ( FALSE === $this->_ReadTable($tname) ) {
         $this->_Error('FILE_ERROR', 'Table not found or broken');
       }
       $this->_tables[$tname . '.row'] = $this->_cache[$tname . '.row'];
@@ -814,7 +820,11 @@ EOT;
   }
   private function _SortRecordValues($tname, &$record, $fromFile)
   {
-    $headers = $this->GetHeaders($tname, $fromFile);
+    if ( $fromFile ) {
+      $headers = $this->_cache[$tname . '.col'],
+    } else {
+      $headers = $this->_tables[$tname . '.col'],
+    }
     $new_record = array();
     foreach ( $headers as $header ) {
       if ( isset($record[$header]) ) {
@@ -945,7 +955,7 @@ EOT;
       }
     }
     $records = array();
-    $headers = $this->GetHeaders($tname, TRUE);
+    $headers = $this->_cache[$tname . '.col'];
     $headers_length = count($headers);
     foreach ( $cts_rlines as $cts_rline ) {
       $record = unserialize($cts_rline);
