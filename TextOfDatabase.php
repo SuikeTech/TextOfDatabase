@@ -309,6 +309,7 @@ class Todb
     $range = array();
     $total = count($records);
     // set up range, like array_slice's (offset, length)
+    array_splice($range, 2);
     $range[0] = $select['range'][0] % $total;
     $range[0] = $range[0] < 0 ? $total + $range[0] : $range[0];
     $range[1] = $select['range'][1] % $total ?: $total;
