@@ -262,17 +262,17 @@ class Todb
     ), $fromFile);
   }
   /**
-  * @info   Get data of specified table that satisfies conditions
+  * @info   Get records of specified table that satisfies conditions
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $select: (optional) selection information
   *         -- by default, all select info are optional --
   *         'action'  => {arr} [ 'GET', 'NUM', 'MAX', 'MIN', 'SET', 'DEL'
   *                              'UNI', 'SET+', 'DEL+' ]
-  *         'range'   => {arr} slice records before processing
+  *         'range'   => {int} slice records before processing
   *         'where'   => {func} deal with every record (with referrence)
   *         'column'  => {str|arr} which column(s) of records to return
   *         'key'     => {str} use column value instead of number index
-  *         'order'   => {arr} sort records by columns
+  *         'order'   => {arr} sort records with column
   *         -- please mind your sever memory, do not deal with big data --
   * @param  {Boolean} $fromFile: (optional) from the file or the working table
   * @return {Mixed}
