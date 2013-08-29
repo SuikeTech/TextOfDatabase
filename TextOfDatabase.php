@@ -200,7 +200,7 @@ class Todb
   public function Count($tname, $where = NULL, $fromFile = FALSE)
   {
     // positions of $fromFile and $where can be swapped
-    // if there is only two arguments
+    // if there are only two arguments
     if ( func_num_args() === 2 and !is_callable($where) ) {
       $fromFile = $where;
       $where = NULL;
@@ -282,7 +282,7 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     // positions of $fromFile and $where can be swapped
-    // if there is only two arguments
+    // if there are only two arguments
     if ( func_num_args() === 2
       and !(is_null($select) or is_array($select)) )
     {
