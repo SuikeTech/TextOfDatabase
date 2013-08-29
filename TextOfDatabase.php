@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 06:20:56 +08:00
+ * @Date:       2013-08-30 06:31:48 +08:00
  * @File:       TextOfDatabase.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -516,7 +516,7 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_NeedTable($tname, FALSE);
-    $this->_SortRecordValues($tname, $record, FALSE);
+    //$this->_SortRecordValues($tname, $record, FALSE);
     $this->_NeedValidTable(array(
       'headers' => $this->_tables[$tname . '.col'],
       'records' => array($record)
@@ -534,9 +534,9 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_NeedTable($tname, FALSE);
-    foreach ( $records as &$record ) {
-      $this->_SortRecordValues($tname, $record, FALSE);
-    }
+    //foreach ( $records as &$record ) {
+    //  $this->_SortRecordValues($tname, $record, FALSE);
+    //}
     $this->_NeedValidTable(array(
       'headers' => $this->_tables[$tname . '.col'],
       'records' => $records
@@ -578,7 +578,7 @@ class Todb
     if ( FALSE === $this->_ReadHeaders($tname) ) {
       $this->_Error('FILE_ERROR', 'Table not found or broken');
     }
-    $this->_SortRecordValues($tname, $record, TRUE);
+    //$this->_SortRecordValues($tname, $record, TRUE);
     if ( $toRecords ) {
       $records = array($records);
     }
@@ -818,21 +818,21 @@ EOT;
     }
     return $this->_db_path . '/' . $name;
   }
-  private function _SortRecordValues($tname, &$record, $fromFile)
-  {
-    if ( $fromFile ) {
-      $headers = $this->_cache[$tname . '.col'],
-    } else {
-      $headers = $this->_tables[$tname . '.col'],
-    }
-    $new_record = array();
-    foreach ( $headers as $header ) {
-      if ( isset($record[$header]) ) {
-        $new_record[$header] = $record[$header];
-      }
-    }
-    $record = $new_record;
-  }
+  //private function _SortRecordValues($tname, &$record, $fromFile)
+  //{
+  //  if ( $fromFile ) {
+  //    $headers = $this->_cache[$tname . '.col'],
+  //  } else {
+  //    $headers = $this->_tables[$tname . '.col'],
+  //  }
+  //  $new_record = array();
+  //  foreach ( $headers as $header ) {
+  //    if ( isset($record[$header]) or array_key_exists($header, $record) ) {
+  //      $new_record[$header] = $record[$header];
+  //    }
+  //  }
+  //  $record = $new_record;
+  //}
   private function _FilterInput(&$val, $key)
   {
     if ( is_string($val) ) {
