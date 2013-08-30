@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 15:26:01 +08:00
+ * @Date:       2013-08-30 15:51:03 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -736,7 +736,6 @@ EOT;
     } else {
       $headers = array();
     }
-    var_export($headers);
     if ( !(is_null($select['key']) or in_array($select['key'], $headers, TRUE)) )
     {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "key"');
