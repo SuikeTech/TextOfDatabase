@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 15:51:03 +08:00
+ * @Date:       2013-08-30 18:28:59 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -197,7 +197,7 @@ class Todb
     $this->_NeedValidName($tname);
     $this->_NeedValidTable($tdata);
     $headers = $tdata['headers'];
-    foreach ( $tdata['records'] as &$record ) {
+    foreach ( $tdata['records'] as $record ) {
       if ( FALSE === ($record = array_combine($headers, $record)) ) {
         $this->_Error('USER_ERROR', 'Invalid records');
       }
@@ -346,13 +346,18 @@ class Todb
       if ( is_null($select) ) {
         return $this->_tables[$tname . '.row'];
       }
-      $records =& $this->_tables[$tname . '.row'];
+      $change_actions = array('SET', 'SET+', 'DEL', 'DEL+');
+      if ( in_array($select['action'], $change_actions, TRUE) ) {
+        $records =& $this->_tables[$tname . '.row'];
+      } else {
+        $records = $this->_tables[$tname . '.row'];
+      }
     } else {
       $this->_NeedTable($tname, TRUE);
       if ( is_null($select) ) {
         return $this->_cache[$tname . '.row'];
       }
-      $records =& $this->_cache[$tname . '.row'];
+      $records = $this->_cache[$tname . '.row'];
     }
 
     // basic info
@@ -376,7 +381,7 @@ class Todb
         $result = array();
         for ( list($i, $m) = $range; $i < $m; $i++ ) {
           if ( is_null($where) or $where($records[$i]) ) {
-            $result[] =& $records[$i];
+            $result[] = $records[$i];
           }
         }
         // sort records with specified order
@@ -422,7 +427,7 @@ class Todb
               if ( is_null($where) || $where($records[$i])
                 and $result[$key] < $records[$i][$key] )
               {
-                $result[$key] =& $records[$i][$key];
+                $result[$key] = $records[$i][$key];
               }
             }
           }
@@ -432,7 +437,7 @@ class Todb
               if ( is_null($where) || $where($records[$i])
                 and $result[$key] > $records[$i][$key] )
               {
-                $result[$key] =& $records[$i][$key];
+                $result[$key] = $records[$i][$key];
               }
             }
           }
@@ -448,7 +453,7 @@ class Todb
         for ( list($i, $m) = $range; $i < $m; $i++ ) {
           if ( $where($records[$i]) ) {
             if ( $to_return_records ) {
-              $selected_records[] =& $records[$i];
+              $selected_records[] = $records[$i];
             } else {
               $records_cnt++;
             }
@@ -470,7 +475,7 @@ class Todb
           for ( list($i, $m) = $range; $i < $m; $i++ ) {
             if ( $where($records[$i]) ) {
               if ( $to_return_records ) {
-                $deleted_records[] =& $records[$i];
+                $deleted_records[] = $records[$i];
               } else {
                 $records_cnt++;
               }
@@ -507,7 +512,7 @@ class Todb
         foreach ( $col_keys as $key ) {
           for ( list($i, $m) = $range; $i < $m; $i++ ) {
             if ( is_null($where) or $where($records[$i]) ) {
-              $result[$key][] =& $records[$i][$key];
+              $result[$key][] = $records[$i][$key];
             }
           }
         }
@@ -787,9 +792,9 @@ EOT;
       $column_keys = array_flip($column_keys);
       $to_first_mode = count($other_keys) > (count($array_keys) / 2);
       $records_length = count($records);
-      foreach ( $records as $index => &$record ) {
+      foreach ( $records as $index => $record ) {
         if ( $has_index_key ) {
-          $key_column_values[$index] =& $record[$indexKey];
+          $key_column_values[$index] = $record[$indexKey];
         }
         if ( $to_first_mode ) {
           $records[$index] = array_intersect_key($record, $column_keys);
@@ -799,8 +804,8 @@ EOT;
       }
       if ( $has_index_key ) {
         $new_records = array();
-        foreach ( $records as $index => &$record ) {
-          $new_records[$key_column_values[$index]] =& $record;
+        foreach ( $records as $index => $record ) {
+          $new_records[$key_column_values[$index]] = $record;
         }
         $records = $new_records;
       }
@@ -822,10 +827,10 @@ EOT;
     $sort_args = array();
     foreach ( $sort_keys as $key ) {
       foreach ( $records as $record ) {
-        $columns[$key][] =& $record[$key];
+        $columns[$key][] = $record[$key];
       }
       $sort_args[] =& $columns[$key];
-      $sort_args[] =& $sort_flags[$key];
+      $sort_args[] = $sort_flags[$key];
     }
     $sort_args[] =& $records;
     call_user_func_array('array_multisort', $sort_args);
@@ -841,8 +846,8 @@ EOT;
   //private function _SortRecordValues($headers, &$records)
   //{
   //  foreach ( $headers as $header ) {
-  //    foreach ( $records as $index => &$record ) {
-  //      $new_records[$index][$header] =& $record[$header];
+  //    foreach ( $records as $index => $record ) {
+  //      $new_records[$index][$header] = $record[$header];
   //    }
   //  }
   //  $records = $new_records;
