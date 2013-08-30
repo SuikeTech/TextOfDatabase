@@ -2,8 +2,8 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 06:50:33 +08:00
- * @File:       TextOfDatabase.php
+ * @Date:       2013-08-30 08:24:30 +08:00
+ * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
  * @Compatible: Apache/2.x with PHP/5.3.2+,5.4.x,5.5.x
@@ -56,6 +56,13 @@ class Todb
     $this->_error_reporting_level = @error_reporting();
   }
 
+  /****************************************************************************\
+   * @Public Methods:   Debug, IsConnected, Connect, Disconnect, IsLocked,
+   *                    Lock, Unlock, ListTables, CreateTable, DropTable,
+   *                    GetHeaders, Count, Max, Min, Unique, Select, Insert,
+   *                    Merge, SetRecords, Append, Update, EmptyCache
+  \****************************************************************************/
+
   /**
   * @info   Open debug mode?
   * @param  {Boolean} $on: whether to show error message
@@ -72,6 +79,15 @@ class Todb
         @error_reporting($this->_error_reporting_level);
       }
     }
+  }
+  /**
+  * @info   Is connected to the database?
+  * @param  void
+  * @return {Boolean}
+  */
+  public function IsConnected()
+  {
+    return $this->_is_connected;
   }
   /**
   * @info   Connect to the database
@@ -102,15 +118,6 @@ class Todb
     $this->_tables = array();
     $this->_is_connected = FALSE;
     unset($this->_db_path, $this->_is_locked);
-  }
-  /**
-  * @info   Is connected to the database?
-  * @param  void
-  * @return {Boolean}
-  */
-  public function IsConnected()
-  {
-    return $this->_is_connected;
   }
   /**
   * @info   Is database locked?
@@ -990,7 +997,8 @@ EOT;
     // write headers
     if ( !$toAppend ) {
       array_walk($tdata['headers'], 'self::_FilterInput');
-      if ( FALSE === @file_put_contents($filename . '.col', serialize($tdata['headers']), LOCK_EX) ) {
+      if ( FALSE === @file_put_contents($filename . '.col', serialize($tdata['headers']), LOCK_EX) )
+      {
         return FALSE;
       }
     }
