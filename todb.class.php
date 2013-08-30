@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 09:13:42 +08:00
+ * @Date:       2013-08-30 15:26:01 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -27,7 +27,7 @@ class Todb
   private $_is_connected = FALSE;
   /**
   * @info   File system handle of lock file
-  * @type   {resource}
+  * @type   resource
   */
   private $_lock = NULL;
   /**
@@ -311,13 +311,19 @@ class Todb
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $select: (optional) selection information
   *         -- by default, all select info are optional --
-  *         'action'  => {arr} [ 'GET', 'NUM', 'MAX', 'MIN', 'SET', 'DEL'
+  *         'action'  => {str} [ 'GET', 'NUM', 'MAX', 'MIN', 'SET', 'DEL'
   *                              'UNI', 'SET+', 'DEL+' ]
+  *                      [default] GET
   *         'range'   => {arr} slice records before processing
+  *                      [default] NULL i.e. process all records
   *         'where'   => {func} deal with every record (with referrence)
+  *                      [default] NULL i.e. not easy to explain it
   *         'column'  => {str|arr} which column(s) of records to return
+  *                      [default] NULL i.e. all columns
   *         'key'     => {str} use column value instead of number index
+  *                      [default] NULL i.e. do nothing
   *         'order'   => {arr} sort records by columns
+  *                      [default] NULL i.e. do nothing
   *         -- please mind your sever memory, do not deal with big data --
   * @param  {Boolean} $fromFile: (optional) from the file or the working table
   * @return {Mixed}
@@ -334,7 +340,7 @@ class Todb
       $fromFile = $select;
       $select = NULL;
     }
-    $this->_FormatSelectInfo($select, $fromFile);
+    $this->_FormatSelectInfo($tname, $select, $fromFile);
     if ( !$fromFile ) {
       $this->_NeedFragmentLoaded($tname, FALSE);
       if ( is_null($select) ) {
@@ -369,23 +375,14 @@ class Todb
         // get records within range
         $result = array();
         for ( list($i, $m) = $range; $i < $m; $i++ ) {
-          $result[] = $records[$i];
-        }
-        // filter records
-        if ( is_callable($where) ) {
-          foreach ( $result as $index => $record ) {
-            if ( !$where($record) ) {
-              // indexes need re-mapping
-              unset($result[$index]);
-            }
+          if ( is_null($where) or $where($records[$i]) ) {
+            $result[] =& $records[$i];
           }
         }
         // sort records with specified order
         $this->_SortRecords($result, $select['order']);
         // only get data of specified column(s)
         $this->_SetColumn($result, $select['column'], $select['key']);
-        // re-map indexes
-        array_splice($result, 0, 0);
         return $result;
 
       case 'NUM':
@@ -451,11 +448,15 @@ class Todb
         for ( list($i, $m) = $range; $i < $m; $i++ ) {
           if ( $where($records[$i]) ) {
             if ( $to_return_records ) {
-              $selected_records[] = $records[$i];
+              $selected_records[] =& $records[$i];
             } else {
               $records_cnt++;
             }
           }
+        }
+        if ( count($selected_records) > 0 ) {
+          $this->_SortRecords($selected_records, $select['order']);
+          $this->_SetColumn($selected_records, $select['column'], $select['key']);
         }
         return $to_return_records ? $selected_records : $records_cnt;
 
@@ -469,7 +470,7 @@ class Todb
           for ( list($i, $m) = $range; $i < $m; $i++ ) {
             if ( $where($records[$i]) ) {
               if ( $to_return_records ) {
-                $deleted_records[] = $records[$i];
+                $deleted_records[] =& $records[$i];
               } else {
                 $records_cnt++;
               }
@@ -479,10 +480,14 @@ class Todb
           }
           // re-map indexes
           array_splice($records, 0, 0);
-          return $to_return_records ? $deleted_records : $records_cnt;
+        } else {
+          $records_cnt = $total;
+          $deleted_records = array_splice($records, 0);
         }
-        $deleted_records = array_splice($records, 0);
-        $records_cnt = $total;
+        if ( count($deleted_records) > 0 ) {
+          $this->_SortRecords($deleted_records, $select['order']);
+          $this->_SetColumn($deleted_records, $select['column'], $select['key']);
+        }
         return $to_return_records ? $deleted_records : $records_cnt;
 
       case 'UNI':
@@ -691,7 +696,7 @@ EOT;
       $this->_tables[$tname . '.row'] = $this->_cache[$tname . '.row'];
     }
   }
-  private function _FormatSelectInfo(&$select, $fromFile)
+  private function _FormatSelectInfo($tname, &$select, $fromFile)
   {
     if ( !(is_null($select) or is_array($select)) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid select');
@@ -719,15 +724,27 @@ EOT;
     $select['column'] = $select['column'] ?: array();
     if ( !(is_string($select['column']) or is_array($select['column'])) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
+    } else if ( is_array($select['column']) ) {
+      foreach ( $select['column'] as $col ) {
+        if ( !is_string($col) ) {
+          $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
+        }
+      }
     }
-    $select['key'] = $select['key'] ?: '';
-    if ( !is_string($select['key']) ) {
+    if ( is_string($select['key']) ) {
+      $headers = $this->GetHeaders($tname, $fromFile);
+    } else {
+      $headers = array();
+    }
+    var_export($headers);
+    if ( !(is_null($select['key']) or in_array($select['key'], $headers, TRUE)) )
+    {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "key"');
     }
     $select['order'] = $select['order'] ?: NULL;
     if ( !(is_null($select['order']) or is_array($select['order'])) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "order"');
-    } else {
+    } else if ( is_array($select['order']) ) {
       $valid_sort_flags = array(SORT_ASC, SORT_DESC);
       foreach ( $select['order'] as $key => $flag ) {
         if ( !isset($key[0]) or !in_array($flag, $valid_sort_flags, TRUE) ) {
