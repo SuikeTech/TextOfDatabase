@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 08:24:30 +08:00
+ * @Date:       2013-08-30 09:13:42 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -26,10 +26,10 @@ class Todb
   */
   private $_is_connected = FALSE;
   /**
-  * @info   Database locked?
-  * @type   bool
+  * @info   File system handle of lock file
+  * @type   {resource}
   */
-  private $_is_locked = NULL;
+  private $_lock = NULL;
   /**
   * @info   Show errors?
   * @type   bool
@@ -93,7 +93,7 @@ class Todb
   * @info   Connect to the database
   * @param  {String}  $path: (optional) database
   * @param  {Boolean} $toLock: (optional) not implemented yet
-  * @return void
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
   public function Connect($path = './db', $toLock = FALSE)
   {
@@ -103,21 +103,25 @@ class Todb
     if ( FALSE === ($realpath = realpath(dirname($path . '/.'))) ) {
       $this->_Error('FILE_ERROR', 'Database not found');
     }
+    // TODO: check and save lock state
     $this->_db_path = $realpath;
     $this->_is_connected = TRUE;
+    return TRUE;
   }
   /**
   * @info   Disconnect from the database
-  * @param  void
-  * @return void
+  * @param  {Boolean} $toForce: (optional) force the lock even if it is locked
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
-  public function Disconnect()
+  public function Disconnect($toForce)
   {
     $this->_NeedConnected();
+    // TODO: $this->Unlock();
     $this->_cache = array();
     $this->_tables = array();
     $this->_is_connected = FALSE;
-    unset($this->_db_path, $this->_is_locked);
+    unset($this->_db_path, $this->_is_locked, $this->_lock);
+    return TRUE;
   }
   /**
   * @info   Is database locked?
@@ -127,27 +131,28 @@ class Todb
   public function IsLocked()
   {
     $this->_NeedConnected();
-    return $this->_is_locked;
+    //return $this->_is_locked;
+    // TODO: check lock state of real lock file instead
   }
   /**
   * @info   Lock database
-  *         Return TRUE for success, or FALSE for failure
   * @param  void
-  * @return {Boolean}
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
   public function Lock()
   {
     $this->_NeedConnected();
+    // TODO: create and open lock file and flock() until Disconnect()
   }
   /**
   * @info   Unlock database
-  *         Return TRUE for success, or FALSE for failure
-  * @param  void
-  * @return {Boolean}
+  * @param  {Boolean} $toForce: (optional) force the lock even if it is locked
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
-  public function Unlock()
+  public function Unlock($toForce = FALSE)
   {
     $this->_NeedConnected();
+    // TODO: flock() to release lock file
   }
   /**
   * @info   Return names of all table in the database if $tname isn't {String}
@@ -182,10 +187,9 @@ class Todb
   }
   /**
   * @info   Create table
-  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of table
   * @param  {Array}   $tdata: headers and records
-  * @return {Boolean}
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
   public function CreateTable($tname, $tdata)
   {
@@ -202,9 +206,8 @@ class Todb
   }
   /**
   * @info   Delete table
-  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of table
-  * @return {Boolean}
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
   public function DropTable($tname)
   {
@@ -568,11 +571,10 @@ class Todb
   }
   /**
   * @info   Append record(s) directly to a table file
-  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $records: record(s) to append
   * @param  {Boolean} $toRecords: not just one record?
-  * @return {Boolean}
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
   public function Append($tname, $records, $toRecords = FALSE)
   {
@@ -596,9 +598,8 @@ class Todb
   }
   /**
   * @info   Write a working table to the database.
-  *         Return TRUE for success, or FALSE for failure
   * @param  {String}  $tname: name of specified table
-  * @return {Boolean}
+  * @return {Boolean} TRUE for success, or FALSE for failure
   */
   public function Update($tname)
   {
