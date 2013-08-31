@@ -8,7 +8,7 @@ Compatible with PHP/5.3.2 or higher version of PHP
 ## Status ##
 
 - [x] Alpha release
-- [x] Completed
+- [ ] Completed
 - [ ] First stable release
 
 ## TODO ##
