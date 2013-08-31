@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-30 18:28:59 +08:00
+ * @Date:       2013-08-31 16:29:00 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -864,8 +864,11 @@ EOT;
       return FALSE;
     }
     foreach ( $headers as $header ) {
-      // header must be non-empty string
-      if ( !is_string($header) or preg_match('/^\\d*$/', $header) ) {
+      // header must be non-empty string, non-numeric-string
+      if ( !is_string($header)
+        or !preg_match('/^\\w+$/', $header)
+        or preg_match('/^\\d*$/', $header) )
+      {
         return FALSE;
       }
     }
