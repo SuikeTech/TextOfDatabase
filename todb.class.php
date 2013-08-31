@@ -26,11 +26,6 @@ class Todb
   */
   private $_is_connected = FALSE;
   /**
-  * @info   File system handle of lock file
-  * @type   resource
-  */
-  private $_lock = NULL;
-  /**
   * @info   Show errors?
   * @type   bool
   */
@@ -57,10 +52,10 @@ class Todb
   }
 
   /****************************************************************************\
-   * @Public Methods:   Debug, IsConnected, Connect, Disconnect, IsLocked,
-   *                    Lock, Unlock, ListTables, CreateTable, DropTable,
-   *                    GetHeaders, Count, Max, Min, Unique, Select, Insert,
-   *                    Merge, SetRecords, Append, Update, EmptyCache
+   * @Public Methods:   Debug, IsConnected, Connect, Disconnect, ListTables,
+   *                    CreateTable, DropTable, GetHeaders, Count, Max, Min,
+   *                    Unique, Select, Insert, Merge, SetRecords, Append,
+   *                    Update, EmptyCache
   \****************************************************************************/
 
   /**
@@ -92,10 +87,9 @@ class Todb
   /**
   * @info   Connect to the database
   * @param  {String}  $path: (optional) database
-  * @param  {Boolean} $toLock: (optional) not implemented yet
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @return void
   */
-  public function Connect($path = './db', $toLock = FALSE)
+  public function Connect($path = './db')
   {
     if ( $this->_is_connected ) {
       $this->_Error('OPERATION_ERROR', 'Not disconnected from previous database');
@@ -103,56 +97,21 @@ class Todb
     if ( FALSE === ($realpath = realpath(dirname($path . '/.'))) ) {
       $this->_Error('FILE_ERROR', 'Database not found');
     }
-    // TODO: check and save lock state
     $this->_db_path = $realpath;
     $this->_is_connected = TRUE;
-    return TRUE;
   }
   /**
   * @info   Disconnect from the database
-  * @param  {Boolean} $toForce: (optional) force the lock even if it is locked
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @param  void
+  * @return void
   */
-  public function Disconnect($toForce)
+  public function Disconnect()
   {
     $this->_NeedConnected();
-    // TODO: $this->Unlock();
     $this->_cache = array();
     $this->_tables = array();
     $this->_is_connected = FALSE;
-    unset($this->_db_path, $this->_is_locked, $this->_lock);
-    return TRUE;
-  }
-  /**
-  * @info   Is database locked?
-  * @param  void
-  * @return {Boolean}
-  */
-  public function IsLocked()
-  {
-    $this->_NeedConnected();
-    //return $this->_is_locked;
-    // TODO: check lock state of real lock file instead
-  }
-  /**
-  * @info   Lock database
-  * @param  void
-  * @return {Boolean} TRUE for success, or FALSE for failure
-  */
-  public function Lock()
-  {
-    $this->_NeedConnected();
-    // TODO: create and open lock file and flock() until Disconnect()
-  }
-  /**
-  * @info   Unlock database
-  * @param  {Boolean} $toForce: (optional) force the lock even if it is locked
-  * @return {Boolean} TRUE for success, or FALSE for failure
-  */
-  public function Unlock($toForce = FALSE)
-  {
-    $this->_NeedConnected();
-    // TODO: flock() to release lock file
+    unset($this->_db_path);
   }
   /**
   * @info   Return names of all table in the database if $tname isn't {String}
@@ -667,7 +626,7 @@ EOT;
   }
   private function _NeedValidName($tname)
   {
-    if ( !is_string($tname) ) {
+    if ( !is_string($tname) or !preg_match('/^\\w+$/', $tname) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid table name');
     }
   }
