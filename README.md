@@ -13,6 +13,7 @@ Compatible with PHP/5.3.2 or higher version of PHP
 
 ## TODO ##
 
-- [x] Re-design return value
+- [x] Redesign return value
+- [ ] Redesign headers file structure to add more functionalities
 - [ ] Full comments for codes
 - [ ] Full documentation
