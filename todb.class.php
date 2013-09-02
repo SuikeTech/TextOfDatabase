@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-08-31 16:29:00 +08:00
+ * @Date:       2013-09-02 16:11:59 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -155,12 +155,7 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_NeedValidTable($tdata);
-    $headers = $tdata['headers'];
-    foreach ( $tdata['records'] as $record ) {
-      if ( FALSE === ($record = array_combine($headers, $record)) ) {
-        $this->_Error('USER_ERROR', 'Invalid records');
-      }
-    }
+    $this->_FormatHeaders($tdata);
     return $this->_WriteTable($tname, $tdata, FALSE, FALSE);
   }
   /**
@@ -186,12 +181,12 @@ class Todb
     $this->_NeedValidName($tname);
     if ( !$fromFile ) {
       $this->_NeedFragmentLoaded($tname, TRUE);
-      return $this->_tables[$tname . '.col'];
+      return array_keys($this->_tables[$tname . '.col']);
     }
     if ( FALSE === $this->_ReadHeaders($tname) ) {
       $this->_Error('FILE_ERROR', 'Table not found or broken');
     }
-    return $this->_cache[$tname . '.col'];
+    return array_keys($this->_cache[$tname . '.col']);
   }
   /**
   * @info   Get the number of records of specified table
@@ -372,6 +367,7 @@ class Todb
           $col_keys = array($select['column']);
         }
         list($first_record) = array_slice($records, 0, 1);
+        // invalid columns are left with NULL
         $col_keys = array_intersect($col_keys, array_keys($first_record));
         if ( count($col_keys) < 1 ) {
           return $to_single_value ? NULL : array();
@@ -381,12 +377,25 @@ class Todb
           $result[$key] = $first_record[$key];
         }
         if ( $to_find_maximum ) {
-          foreach ( $col_keys as $key ) {
-            for ( list($i, $m) = $range; $i < $m; $i++ ) {
-              if ( is_null($where) || $where($records[$i])
-                and $result[$key] < $records[$i][$key] )
-              {
-                $result[$key] = $records[$i][$key];
+          if ( is_null($where) and $range[0] === 0 and $range[1] === $total ) {
+            if ( !$fromFile ) {
+              $this->_NeedFragmentLoaded($tname, TRUE);
+              $maximums = $this->_tables[$tname . '.col'];
+            } else {
+              $maximums = $this->_cache[$tname . '.col'];
+            }
+            $result = array();
+            foreach ( $col_keys as $key ) {
+              $result[$key] = $maximums[$key];
+            }
+          } else {
+            foreach ( $col_keys as $key ) {
+              for ( list($i, $m) = $range; $i < $m; $i++ ) {
+                if ( is_null($where) || $where($records[$i])
+                  and $result[$key] < $records[$i][$key] )
+                {
+                  $result[$key] = $records[$i][$key];
+                }
               }
             }
           }
@@ -495,10 +504,20 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_NeedTable($tname, FALSE);
-    $this->_NeedValidTable(array(
-      'headers' => $this->_tables[$tname . '.col'],
+    $cached_headers = $this->_tables[$tname . '.col'];
+    $header_names = array_keys($cached_headers);
+    $tdata = array(
+      'headers' => $header_names,
       'records' => array($record)
-    ));
+    );
+    $this->_NeedValidTable($tdata);
+    foreach ( $record as $header => $value ) {
+      if ( $cached_headers[$header] < $record[$header] ) {
+        $cached_headers[$header] = $record[$header];
+      }
+    }
+    $this->_SortRecordValues($header_names, array(&$record));
+    $this->_tables[$tname . '.col'] = $cached_headers;
     $this->_tables[$tname . '.row'][] = $record;
   }
   /**
@@ -512,14 +531,23 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_NeedTable($tname, FALSE);
+    $cached_headers = $this->_tables[$tname . '.col'];
+    $header_names = array_keys($cached_headers);
     $this->_NeedValidTable(array(
-      'headers' => $this->_tables[$tname . '.col'],
+      'headers' => $header_names,
       'records' => $records
     ));
-    call_user_func_array('array_push', array(
-      &$this->_tables[$tname . '.row'],
-      $records
-    ));
+    $this->_SortRecordValues($header_names, $records);
+    $index = $tname . '.row';
+    foreach ( $records as $record ) {
+      $this->_tables[$index][] = $record;
+      foreach ( $cached_headers as $header => $maximum ) {
+        if ( $maximum < $record[$header] ) {
+          $cached_headers[$header] = $record[$header];
+        }
+      }
+    }
+    $this->_tables[$tname . '.col'] = $cached_headers;
   }
   /**
   * @info   Overwrite records of a working table
@@ -532,36 +560,51 @@ class Todb
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     $this->_NeedFragmentLoaded($tname, TRUE);
-    $this->_NeedValidTable(array(
-      'headers' => $this->_tables[$tname . '.col'],
+    $cached_headers = $this->_tables[$tname . '.col'];
+    $header_names = array_keys($cached_headers);
+    $tdata = array(
+      'headers' => $header_names,
       'records' => $records
-    ));
+    );
+    $this->_NeedValidTable($tdata);
+    $this->_FormatHeaders($tdata);
+    $this->_SortRecordValues($header_names, $records);
+    $this->_tables[$tname . 'col'] = $tdata['headers'];
     $this->_tables[$tname . 'row'] = $records;
   }
   /**
   * @info   Append record(s) directly to a table file
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $records: record(s) to append
-  * @param  {Boolean} $toRecords: not just one record?
+  * @param  {Boolean} $isOneRecord: just one record?
   * @return {Boolean} TRUE for success, or FALSE for failure
   */
-  public function Append($tname, $records, $toRecords = FALSE)
+  public function Append($tname, $records, $isOneRecord = FALSE)
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     if ( FALSE === $this->_ReadHeaders($tname) ) {
       $this->_Error('FILE_ERROR', 'Table not found or broken');
     }
-    if ( $toRecords ) {
+    if ( $isOneRecord ) {
       $records = array($records);
     }
-    $headers = $this->_cache[$tname . '.col'];
-    $this->_NeedValidTable(array(
-      'headers' => $headers,
+    $cached_headers = $this->_cache[$tname . '.col'];
+    $header_names = array_keys($cached_headers);
+    $tdata = array(
+      'headers' => $header_names,
       'records' => $records
-    ));
+    );
+    $this->_NeedValidTable($tdata);
+    $this->_FormatHeaders($tdata);
+    foreach ( $tdata['headers'] as $header => $maximum ) {
+      if ( $cached_headers[$header] <= $maximum ) {
+        $cached_headers[$header] = $maximum;
+      }
+    }
+    $this->_SortRecordValues($header_names, $records);
     return $this->_WriteTable($tname, array(
-      'headers' => $headers,
+      'headers' => $cached_headers,
       'records' => $records
     ), TRUE, FALSE);
   }
@@ -801,21 +844,37 @@ EOT;
     }
     return $this->_db_path . '/' . $name;
   }
-  // for neat dump file?
-  //private function _SortRecordValues($headers, &$records)
-  //{
-  //  foreach ( $headers as $header ) {
-  //    foreach ( $records as $index => $record ) {
-  //      $new_records[$index][$header] = $record[$header];
-  //    }
-  //  }
-  //  $records = $new_records;
-  //}
+  private function _SortRecordValues($headers, &$records)
+  {
+    foreach ( $headers as $header ) {
+      foreach ( $records as $index => $record ) {
+        $new_records[$index][$header] = $record[$header];
+      }
+    }
+    $records = $new_records;
+  }
   private function _FilterInput(&$val, $key)
   {
     if ( is_string($val) ) {
       $val = str_replace("\x00", '', $val);
     }
+  }
+  private function _FormatHeaders(&$tdata)
+  {
+    $headers = $tdata['headers'];
+    $indexes = array_flip($headers);
+    $header_maximums = array();
+    list($first_record) = array_slice($tdata['records'], 0, 1);
+    foreach ( $headers as $header ) {
+      $header_maximums[$header] = $first_record[$header];
+      foreach ( $tdata['records'] as $record ) {
+        $value = $record[$indexes[$header]];
+        if ( $header_maximums[$header] < $value ) {
+          $header_maximums[$header] = $value;
+        }
+      }
+    }
+    $tdata['headers'] = array_combine($headers, $header_maximums);
   }
   private function _IsValidHeaders($headers)
   {
@@ -936,7 +995,7 @@ EOT;
       }
     }
     $records = array();
-    $headers = $this->_cache[$tname . '.col'];
+    $headers = array_keys($this->_cache[$tname . '.col']);
     $headers_length = count($headers);
     foreach ( $cts_rlines as $cts_rline ) {
       $record = unserialize($cts_rline);
@@ -979,13 +1038,11 @@ EOT;
     }
     @ignore_user_abort(TRUE);
     // write headers
-    if ( !$toAppend ) {
-      array_walk($tdata['headers'], 'self::_FilterInput');
-      if ( FALSE === @file_put_contents($filename . '.col', serialize($tdata['headers']), LOCK_EX) )
-      {
-        return FALSE;
-      }
+    if ( FALSE === @file_put_contents($filename . '.col', serialize($tdata['headers']), LOCK_EX) )
+    {
+      return FALSE;
     }
+    $this->_cache[$tname . '.col'] = $tdata['headers'];
     // write records
     array_walk_recursive($tdata['records'], 'self::_FilterInput');
     $fh_write_mode = $toAppend ? 'ab' : 'wb';
