@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-02 16:11:59 +08:00
+ * @Date:       2013-09-03 12:52:27 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -55,7 +55,7 @@ class Todb
    * @Public Methods:   Debug, IsConnected, Connect, Disconnect, ListTables,
    *                    CreateTable, DropTable, GetHeaders, Count, Max, Min,
    *                    Unique, Select, Insert, Merge, SetRecords, Append,
-   *                    Update, EmptyCache
+   *                    SetHeaders, Update, EmptyCache
   \****************************************************************************/
 
   /**
@@ -598,7 +598,7 @@ class Todb
     $this->_NeedValidTable($tdata);
     $this->_FormatHeaders($tdata);
     foreach ( $tdata['headers'] as $header => $maximum ) {
-      if ( $cached_headers[$header] <= $maximum ) {
+      if ( $cached_headers[$header] < $maximum ) {
         $cached_headers[$header] = $maximum;
       }
     }
@@ -607,6 +607,16 @@ class Todb
       'headers' => $cached_headers,
       'records' => $records
     ), TRUE, FALSE);
+  }
+  /**
+  * @info   Set headers of specified table
+  * @param  {String}  $tname: name of specified table
+  * @param  {Array}   $headers: headers to be kept
+  * @return {Boolean} TRUE for success, or FALSE for failure
+  */
+  public function SetHeaders($tname, $headers)
+  {
+    // TODO
   }
   /**
   * @info   Write a working table to the database.
