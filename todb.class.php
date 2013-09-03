@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-03 12:52:27 +08:00
+ * @Date:       2013-09-03 20:47:37 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -516,9 +516,10 @@ class Todb
         $cached_headers[$header] = $record[$header];
       }
     }
-    $this->_SortRecordValues($header_names, array(&$record));
+    $records = array($record);
+    $this->_SortRecordValues($header_names, $records);
     $this->_tables[$tname . '.col'] = $cached_headers;
-    $this->_tables[$tname . '.row'][] = $record;
+    $this->_tables[$tname . '.row'][] = array_pop($records);
   }
   /**
   * @info   Merge records to a working table
@@ -1054,26 +1055,27 @@ EOT;
     }
     $this->_cache[$tname . '.col'] = $tdata['headers'];
     // write records
-    array_walk_recursive($tdata['records'], 'self::_FilterInput');
-    $fh_write_mode = $toAppend ? 'ab' : 'wb';
-    $fh_row = @fopen($filename . '.row', $fh_write_mode, LOCK_EX);
-    $records_ix_max = count($tdata['records']) - 1;
-    for ( $i = 0; $i <= $records_ix_max; $i++ ) {
-      $record = $tdata['records'][$i];
-      $line = $toAppend ? PHP_EOL : '';
-      $line .= "\x00" . serialize(array_values($record));
-      if ( $i < $records_ix_max ) {
-        $line .= PHP_EOL;
-      }
-      if ( FALSE === @fwrite($fh_row, $line) ) {
-        @flock($fh_row, LOCK_UN);
-        @fclose($fh_row);
-        @ignore_user_abort(FALSE);
-        return FALSE;
-      }
+    $write_mode = $toAppend ? (LOCK_EX | FILE_APPEND) : LOCK_EX;
+    if ( FALSE === @flock($fh_row, LOCK_EX) ) {
+      @fclose($fh_row);
+      @ignore_user_abort(FALSE);
+      return FALSE;
     }
-    @flock($fh_row, LOCK_UN);
-    @fclose($fh_row);
+    $lines = array();
+    foreach ( $tdata['records'] as $record ) {
+      array_walk($record, 'self::_FilterInput');
+      $lines[] = "\x00" . serialize(array_values($record));
+    }
+    if ( !isset($lines[1]) ) {
+      $lines = PHP_EOL . $lines[0];
+    } else {
+      $lines = implode(PHP_EOL, $lines);
+    }
+    if ( FALSE === @file_put_contents($filename . '.row', $lines, $write_mode) )
+    {
+      @ignore_user_abort(FALSE);
+      return FALSE;
+    }
     @ignore_user_abort(FALSE);
     if ( $toOverwrite ) {
       $this->_cache[$tname . '.col'] = $tdata['headers'];
