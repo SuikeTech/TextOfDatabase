@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-03 22:31:00 +08:00
+ * @Date:       2013-09-03 23:05:03 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -1067,11 +1067,10 @@ EOT;
       array_walk($record, 'self::_FilterInput');
       $lines[] = "\x00" . serialize(array_values($record));
     }
-    if ( !isset($lines[1]) and isset($lines[0]) ) {
-      $lines = PHP_EOL . $lines[0];
-    } else {
-      $lines = implode(PHP_EOL, $lines);
+    if ( isset($lines[0]) and $toAppend ) {
+      $lines[0] = PHP_EOL . $lines[0];
     }
+    $lines = implode(PHP_EOL, $lines);
     if ( FALSE === @file_put_contents($filename . '.row', $lines, $write_mode) )
     {
       @ignore_user_abort(FALSE);
