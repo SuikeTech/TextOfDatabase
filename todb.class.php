@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-03 20:47:37 +08:00
+ * @Date:       2013-09-03 22:31:00 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -628,10 +628,11 @@ class Todb
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
-    if ( !is_array($this->_tables[$tname . '.col'])
-      or !is_array($this->_tables[$tname . '.row']) )
-    {
-      $this->_Error('OPERATION_ERROR', 'Table not loaded');
+    if ( !is_array($this->_tables[$tname . '.row']) ) {
+      return TRUE;
+    }
+    if ( !is_array($this->_tables[$tname . '.col']) ) {
+      $this->_NeedFragmentLoaded($tname, TRUE);
     }
     return $this->_WriteTable($tname, array(
       'headers' => $this->_tables[$tname . '.col'],
@@ -1066,7 +1067,7 @@ EOT;
       array_walk($record, 'self::_FilterInput');
       $lines[] = "\x00" . serialize(array_values($record));
     }
-    if ( !isset($lines[1]) ) {
+    if ( !isset($lines[1]) and isset($lines[0]) ) {
       $lines = PHP_EOL . $lines[0];
     } else {
       $lines = implode(PHP_EOL, $lines);
