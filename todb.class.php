@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-03 23:05:03 +08:00
+ * @Date:       2013-09-04 14:56:50 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -801,7 +801,7 @@ EOT;
       $key_column_values = array();
       $column_keys = array_diff($column_keys ?: $array_keys, array($indexKey));
     }
-    if ( !empty($column_keys) and count($column_keys) < count($first_record) ) {
+    if ( !empty($column_keys) ) {
       $other_keys = array_flip(array_diff($array_keys, $column_keys));
       $column_keys = array_flip($column_keys);
       $to_first_mode = count($other_keys) > (count($array_keys) / 2);
