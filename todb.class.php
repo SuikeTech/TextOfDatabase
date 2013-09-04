@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-04 14:56:50 +08:00
+ * @Date:       2013-09-04 16:19:41 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -723,6 +723,7 @@ EOT;
     $valid_actions = array(
       'GET', 'NUM', 'MAX', 'MIN', 'SET', 'DEL', 'SET+', 'DEL+', 'UNI'
     );
+    $headers = $this->GetHeaders($tname, $fromFile);
     $select['action'] = strtoupper($select['action']) ?: 'GET';
     if ( !is_string($select['action'])
       or !in_array($select['action'], $valid_actions, TRUE) )
@@ -743,19 +744,17 @@ EOT;
     $select['column'] = $select['column'] ?: array();
     if ( !(is_string($select['column']) or is_array($select['column'])) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
-    } else if ( is_array($select['column']) ) {
-      foreach ( $select['column'] as $col ) {
-        if ( !is_string($col) ) {
-          $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
-        }
+    } else {
+      if ( is_string($select['column']) ) {
+        $select['column'] = array($select['column']);
+      }
+      if ( count(array_diff($select['column'], $headers)) > 0 ) {
+        $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
       }
     }
-    if ( is_string($select['key']) ) {
-      $headers = $this->GetHeaders($tname, $fromFile);
-    } else {
-      $headers = array();
-    }
-    if ( !(is_null($select['key']) or in_array($select['key'], $headers, TRUE)) )
+    if ( !(is_null($select['key'])
+          or (in_array($select['key'], $headers, TRUE)
+              and !in_array($select['key'], $select['column'], TRUE))) )
     {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "key"');
     }
@@ -785,44 +784,45 @@ EOT;
   private function _SetColumn(&$records, $columnKeys, $indexKey)
   {
     if ( count($records) < 1 ) {
-      return $records;
+      return;
     }
-    if ( is_string($columnKeys) ) {
-      $columnKeys = isset($columnKeys[0]) ? array($columnKeys) : array();
+    $has_column_key = !empty($columnKeys);
+    $has_index_key = !empty($indexKey);
+    if ( !($has_column_key or $has_index_key ) ) {
+      return;
     }
     list($first_record) = array_slice($records, 0, 1);
     $array_keys = array_keys($first_record);
-    $column_keys = array_intersect($columnKeys, $array_keys);
-    $has_index_key = !empty($indexKey);
+    $column_keys = $columnKeys ?: array_diff($array_keys, array($indexKey));
     if ( $has_index_key ) {
-      if ( !in_array($indexKey, $array_keys, TRUE) ) {
-        $this->_Error('SYNTAX_ERROR', 'Invalid select info "key"');
-      }
       $key_column_values = array();
-      $column_keys = array_diff($column_keys ?: $array_keys, array($indexKey));
     }
-    if ( !empty($column_keys) ) {
-      $other_keys = array_flip(array_diff($array_keys, $column_keys));
-      $column_keys = array_flip($column_keys);
-      $to_first_mode = count($other_keys) > (count($array_keys) / 2);
-      $records_length = count($records);
-      foreach ( $records as $index => $record ) {
-        if ( $has_index_key ) {
-          $key_column_values[$index] = $record[$indexKey];
-        }
+    $order_keys = array_flip($column_keys);
+    $other_keys = array_flip(array_diff($array_keys, $column_keys));
+    $to_first_mode = count($other_keys) > (count($array_keys) / 2);
+    foreach ( $records as $index => $record ) {
+      if ( $has_index_key ) {
+        $key_column_values[$index] = $record[$indexKey];
+      }
+      if ( $has_column_key ) {
         if ( $to_first_mode ) {
-          $records[$index] = array_intersect_key($record, $column_keys);
+          $records[$index] = array_intersect_key($record, $order_keys);
         } else {
           $records[$index] = array_diff_key($record, $other_keys);
         }
-      }
-      if ( $has_index_key ) {
-        $new_records = array();
-        foreach ( $records as $index => $record ) {
-          $new_records[$key_column_values[$index]] = $record;
+        $new_record = array();
+        foreach ( $column_keys as $key ) {
+          $new_record[$key] = $records[$index][$key];
         }
-        $records = $new_records;
+        $records[$index] = $new_record;
       }
+    }
+    if ( $has_index_key ) {
+      $new_records = array();
+      foreach ( $records as $index => $record ) {
+        $new_records[$key_column_values[$index]] = $record;
+      }
+      $records = $new_records;
     }
   }
   private function _SortRecords(&$records, $sortFlags)
