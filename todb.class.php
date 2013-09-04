@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-04 16:19:41 +08:00
+ * @Date:       2013-09-05 00:10:59 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -796,6 +796,7 @@ EOT;
     $column_keys = $columnKeys ?: array_diff($array_keys, array($indexKey));
     if ( $has_index_key ) {
       $key_column_values = array();
+      $has_column_key = TRUE;
     }
     $order_keys = array_flip($column_keys);
     $other_keys = array_flip(array_diff($array_keys, $column_keys));
