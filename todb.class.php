@@ -2,11 +2,11 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-05 00:10:59 +08:00
+ * @Date:       2013-09-05 19:00:02 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
- * @Compatible: Apache/2.x with PHP/5.3.2+,5.4.x,5.5.x
+ * @Compatible: PHP/5.3.2+,5.4.x,5.5.x
  * @Thanks to:  pjjTextBase <http://pjj.pl/pjjtextbase/>
  *              txtSQL <http://txtsql.sourceforge.net>
 \******************************************************************************/
@@ -1004,7 +1004,7 @@ EOT;
         $cts_rindex++;
         $cts_rlines[] = substr($line, 1);
       } else {
-        $cts_rlines[$cts_rindex] .= PHP_EOL . $line;
+        $cts_rlines[$cts_rindex] .= "\n" . $line;
       }
     }
     $records = array();
@@ -1069,9 +1069,9 @@ EOT;
       $lines[] = "\x00" . serialize(array_values($record));
     }
     if ( isset($lines[0]) and $toAppend ) {
-      $lines[0] = PHP_EOL . $lines[0];
+      $lines[0] = "\n" . $lines[0];
     }
-    $lines = implode(PHP_EOL, $lines);
+    $lines = implode("\n", $lines);
     if ( FALSE === @file_put_contents($filename . '.row', $lines, $write_mode) )
     {
       @ignore_user_abort(FALSE);
