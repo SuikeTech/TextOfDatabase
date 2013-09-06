@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-06 23:28:28 +08:00
+ * @Date:       2013-09-07 00:45:56 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -147,13 +147,20 @@ class Todb
   /**
   * @info   Create table
   * @param  {String}  $tname: name of table
-  * @param  {Array}   $tdata: headers and records
+  * @param  {Array}   $headers: names of headers
   * @return {Boolean} TRUE for success, or FALSE for failure
   */
-  public function CreateTable($tname, $tdata)
+  public function CreateTable($tname, $headers)
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
+    if ( $this->ListTables($tname) ) {
+      $this->_Error('OPERATION_ERROR', 'Table already exists');
+    }
+    $tdata = array(
+      'headers' => $headers,
+      'records' => array()
+    );
     $this->_NeedValidTable($tdata);
     $this->_FormatHeaders($tdata);
     return $this->_WriteTable($tname, $tdata, FALSE, FALSE);
@@ -519,7 +526,7 @@ class Todb
       }
     }
     $records = array($record);
-    $this->_SortRecordValues($header_names, $records);
+    $this->_FormatRecordValues($header_names, $records);
     $this->_tables[$tname . '.col'] = $cached_headers;
     $this->_tables[$tname . '.row'][] = array_pop($records);
   }
@@ -540,7 +547,7 @@ class Todb
       'headers' => $header_names,
       'records' => $records
     ));
-    $this->_SortRecordValues($header_names, $records);
+    $this->_FormatRecordValues($header_names, $records);
     $index = $tname . '.row';
     foreach ( $records as $record ) {
       $this->_tables[$index][] = $record;
@@ -571,7 +578,7 @@ class Todb
     );
     $this->_NeedValidTable($tdata);
     $this->_FormatHeaders($tdata);
-    $this->_SortRecordValues($header_names, $records);
+    $this->_FormatRecordValues($header_names, $records);
     $this->_tables[$tname . 'col'] = $tdata['headers'];
     $this->_tables[$tname . 'row'] = $records;
   }
@@ -605,7 +612,7 @@ class Todb
         $cached_headers[$header] = $maximum;
       }
     }
-    $this->_SortRecordValues($header_names, $records);
+    $this->_FormatRecordValues($header_names, $records);
     return $this->_WriteTable($tname, array(
       'headers' => $cached_headers,
       'records' => $records
@@ -864,7 +871,7 @@ EOT;
     }
     return $this->_db_path . '/' . $name;
   }
-  private function _SortRecordValues($headers, &$records)
+  private function _FormatRecordValues($headers, &$records)
   {
     foreach ( $headers as $header ) {
       foreach ( $records as $index => $record ) {
@@ -912,13 +919,13 @@ EOT;
     }
     return TRUE;
   }
-  private function _IsValidRecords($records, $length)
+  private function _IsValidRecords($records)
   {
     if ( !is_array($records) ) {
       return FALSE;
     }
     foreach ( $records as $record ) {
-      if ( !is_array($record) or $length !== count($record) ) {
+      if ( !is_array($record) ) {
         return FALSE;
       }
     }
@@ -930,13 +937,11 @@ EOT;
       $this->_Error('SYNTAX_ERROR', 'Invalid table');
     }
     // 1-D Array: names of headers
-    $headers = $tdata['headers'];
-    if ( !$this->_IsValidHeaders($headers) ) {
+    if ( !$this->_IsValidHeaders($tdata['headers']) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid headers');
     }
     // 2-D Array: header-value dicts of records
-    $records = $tdata['records'] ?: array();
-    if ( !$this->_IsValidRecords($records, count($headers)) ) {
+    if ( !$this->_IsValidRecords($tdata['records']) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid records');
     }
   }
