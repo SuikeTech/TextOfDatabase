@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-05 19:00:02 +08:00
+ * @Date:       2013-09-06 23:15:28 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -306,12 +306,14 @@ class Todb
       } else {
         $records = $this->_tables[$tname . '.row'];
       }
+      $headers = array_keys($this->_tables[$tname . '.col']);
     } else {
       $this->_NeedTable($tname, TRUE);
       if ( is_null($select) ) {
         return $this->_cache[$tname . '.row'];
       }
       $records = $this->_cache[$tname . '.row'];
+      $headers = array_keys($this->_cache[$tname . '.col']);
     }
 
     // basic info
@@ -368,7 +370,7 @@ class Todb
         }
         list($first_record) = array_slice($records, 0, 1);
         // invalid columns are left with NULL
-        $col_keys = array_intersect($col_keys, array_keys($first_record));
+        $col_keys = array_intersect($col_keys, $headers);
         if ( count($col_keys) < 1 ) {
           return $to_single_value ? NULL : array();
         }
@@ -473,7 +475,7 @@ class Todb
         $result = array_fill_keys($col_keys, array());
         list($first_record) = array_slice($records, 0, 1);
         // invalid columns are left with empty array
-        $col_keys = array_intersect($col_keys, array_keys($first_record));
+        $col_keys = array_intersect($col_keys, $headers);
         if ( count($col_keys) < 1 ) {
           return $to_single_value ? NULL : $result;
         }
@@ -744,10 +746,7 @@ EOT;
     $select['column'] = $select['column'] ?: array();
     if ( !(is_string($select['column']) or is_array($select['column'])) ) {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
-    } else {
-      if ( is_string($select['column']) ) {
-        $select['column'] = array($select['column']);
-      }
+    } else if ( is_array($select['column']) ) {
       if ( count(array_diff($select['column'], $headers)) > 0 ) {
         $this->_Error('SYNTAX_ERROR', 'Invalid select info "column"');
       }
@@ -786,13 +785,16 @@ EOT;
     if ( count($records) < 1 ) {
       return;
     }
+    if ( is_string($columnKeys) ) {
+      $columnKeys = array($columnKeys);
+    }
     $has_column_key = !empty($columnKeys);
     $has_index_key = !empty($indexKey);
     if ( !($has_column_key or $has_index_key ) ) {
       return;
     }
     list($first_record) = array_slice($records, 0, 1);
-    $array_keys = array_keys($first_record);
+    $array_keys = array_keys($first_record); // even if $first_record is empty
     $column_keys = $columnKeys ?: array_diff($array_keys, array($indexKey));
     if ( $has_index_key ) {
       $key_column_values = array();
