@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-06 23:15:28 +08:00
+ * @Date:       2013-09-06 23:28:28 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings <jakwings@gmail.com>
  * @License:    GPLv3
@@ -752,10 +752,15 @@ EOT;
       }
     }
     if ( !(is_null($select['key'])
-          or (in_array($select['key'], $headers, TRUE)
-              and !in_array($select['key'], $select['column'], TRUE))) )
+          or in_array($select['key'], $headers, TRUE)) )
     {
       $this->_Error('SYNTAX_ERROR', 'Invalid select info "key"');
+    } else if ( is_string($select['key']) ) {
+      if ( is_string($select['column']) && $select['key'] === $select['column']
+        or in_array($select['key'], $select['column'], TRUE) )
+      {
+        $this->_Error('SYNTAX_ERROR', 'Invalid select info "key"');
+      }
     }
     $select['order'] = $select['order'] ?: NULL;
     if ( !(is_null($select['order']) or is_array($select['order'])) ) {
