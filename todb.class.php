@@ -4,8 +4,8 @@
  * @Name:       TextOfDatabase
  * @Date:       2013-09-07 00:45:56 +08:00
  * @File:       todb.class.php
- * @Author:     Jak Wings <jakwings@gmail.com>
- * @License:    GPLv3
+ * @Author:     Jak Wings
+ * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
  * @Compatible: PHP/5.3.2+,5.4.x,5.5.x
  * @Thanks to:  pjjTextBase <http://pjj.pl/pjjtextbase/>
  *              txtSQL <http://txtsql.sourceforge.net>
