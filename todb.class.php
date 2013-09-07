@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-07 00:45:56 +08:00
+ * @Date:       2013-09-07 17:43:21 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -470,6 +470,9 @@ class Todb
           $this->_SortRecords($deleted_records, $select['order']);
           $this->_SetColumn($deleted_records, $select['column'], $select['key']);
         }
+        if ( count($records) < 1 ) {
+          $this->_ClearMaximum($tname);
+        }
         return $to_return_records ? $deleted_records : $records_cnt;
 
       case 'UNI':
@@ -863,6 +866,10 @@ EOT;
     }
     $sort_args[] =& $records;
     call_user_func_array('array_multisort', $sort_args);
+  }
+  private function _ClearMaximum($tname) {
+    $headers = array_keys($this->_tables[$tname . '.col']);
+    $this->_tables[$tname . '.col'] = array_fill_keys($headers, NULL);
   }
   private function _GetSecureFileName($name)
   {
