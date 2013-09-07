@@ -1,20 +1,16 @@
 TextOfDatabase
 ==============
 
-A plain text database implemented with PHP.
+A plain text database implemented by PHP.
 
-Compatible with PHP/5.3.2 or higher version of PHP on Linux Server
+Compatible with PHP/5.3.2 or higher version of PHP on Unix server
 
 ## Status ##
 
-- [x] Alpha release
-- [ ] Completed
-- [ ] First stable release
+- Alpha release
 
 ## TODO ##
 
-- [x] Redesign return value
-- [x] Redesign headers file structure to add more functionalities
-- [ ] Implement SetHeaders()
-- [ ] Full comments for codes
-- [ ] Full documentation
+- Implement SetHeaders()
+- Full comments for codes
+- Full documentation
