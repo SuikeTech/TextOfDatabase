@@ -1,6 +1,6 @@
 <?php
 /******************************************************************************\
- * @Version:    0.1
+ * @Version:    0.9
  * @Name:       TextOfDatabase
  * @Date:       2013-09-08 16:55:23 +08:00
  * @File:       todb.class.php
@@ -14,7 +14,7 @@
 
 class Todb
 {
-  const VERSION = '0.1';
+  const VERSION = '0.9';
   /**
   * @info   Database directory
   * @type   string
