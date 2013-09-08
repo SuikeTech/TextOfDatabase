@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-08 16:25:16 +08:00
+ * @Date:       2013-09-08 16:47:58 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -376,10 +376,8 @@ class Todb
           $col_keys = array($select['column']);
         }
         list($first_record) = array_slice($records, 0, 1);
-        // invalid columns are left with NULL
-        $col_keys = array_intersect($col_keys, $headers);
         if ( count($col_keys) < 1 ) {
-          return $to_single_value ? NULL : array();
+          $col_keys = $headers;
         }
         $result = array_fill_keys($col_keys, NULL);
         foreach ( $col_keys as $key ) {
@@ -482,13 +480,10 @@ class Todb
           $to_single_value = TRUE;
           $col_keys = array($select['column']);
         }
-        $result = array_fill_keys($col_keys, array());
-        list($first_record) = array_slice($records, 0, 1);
-        // invalid columns are left with empty array
-        $col_keys = array_intersect($col_keys, $headers);
-        if ( count($col_keys) < 1 ) {
-          return $to_single_value ? NULL : $result;
+        if ( empty($col_keys) ) {
+          $col_keys = $headers;
         }
+        $result = array_fill_keys($col_keys, array());
         foreach ( $col_keys as $key ) {
           for ( list($i, $m) = $range; $i < $m; $i++ ) {
             if ( is_null($where) or $where($records[$i]) ) {
@@ -499,6 +494,7 @@ class Todb
         foreach ( $col_keys as $key ) {
           $result[$key] = array_unique($result[$key], SORT_REGULAR);
         }
+        $this->_SortUniqueValues($result, $select['order']);
         return $to_single_value ? array_values($result)[0] : $result;
 
       default:
@@ -870,6 +866,19 @@ EOT;
         $new_records[$key_column_values[$index]] = $record;
       }
       $records = $new_records;
+    }
+  }
+  private function _SortUniqueValues(&$array, $sortFlags)
+  {
+    if ( is_null($sortFlags) ) {
+      return;
+    }
+    foreach ( $sortFlags as $key => $flag ) {
+      if ( $flag === SORT_ASC ) {
+        sort($array[$key], SORT_REGULAR);
+      } else {
+        rsort($array[$key], SORT_REGULAR);
+      }
     }
   }
   private function _SortRecords(&$records, $sortFlags)
