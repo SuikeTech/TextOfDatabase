@@ -7,10 +7,9 @@ Compatible with PHP/5.3.2 or higher version of PHP on Unix server
 
 ## Status ##
 
-- Alpha release
+- Completed
 
 ## TODO ##
 
-- Implement SetHeaders()
 - Full comments for codes
 - Full documentation

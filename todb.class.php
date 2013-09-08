@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-07 17:43:21 +08:00
+ * @Date:       2013-09-08 16:25:16 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -625,11 +625,38 @@ class Todb
   * @info   Set headers of specified table
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $headers: headers to be kept
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @return void
   */
   public function SetHeaders($tname, $headers)
   {
-    // TODO
+    $this->_NeedConnected();
+    $this->_NeedValidName($tname);
+    $this->_NeedValidTable(array(
+      'headers' => $headers,
+      'records' => array()
+    ));
+    $this->_NeedTable($tname, FALSE);
+    $old_headers = array_keys($this->_tables[$tname . '.col']);
+    $old_records = $this->_tables[$tname . '.row'];
+    $this->_tables[$tname . '.row'] = array();
+    $common_headers = array_intersect($old_headers, $headers);
+    $cached_headers = array_fill_keys($headers, NULL);
+    $new_records = array();
+    $empty_record = array_fill_keys($headers, NULL);
+    foreach ( $old_records as $index => $record ) {
+      $new_record = $empty_record;
+      foreach ( $common_headers as $header ) {
+        $value = $record[$header];
+        $new_record[$header] = $value;
+        if ( $cached_headers[$header] < $value ) {
+          $cached_headers[$header] = $value;
+        }
+      }
+      $new_records[] = $new_record;
+      unset($old_records[$index]);
+    }
+    $this->_tables[$tname . '.row'] = $new_records;
+    $this->_tables[$tname . '.col'] = $cached_headers;;
   }
   /**
   * @info   Write a working table to the database.
@@ -778,7 +805,9 @@ EOT;
     } else if ( is_array($select['order']) ) {
       $valid_sort_flags = array(SORT_ASC, SORT_DESC);
       foreach ( $select['order'] as $key => $flag ) {
-        if ( !isset($key[0]) or !in_array($flag, $valid_sort_flags, TRUE) ) {
+        if ( !in_array($key, $headers)
+          or !in_array($flag, $valid_sort_flags, TRUE) )
+        {
           $this->_Error('SYNTAX_ERROR', 'Invalid select info "order"');
         }
       }
