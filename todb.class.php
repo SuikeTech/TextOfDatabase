@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-08 16:47:58 +08:00
+ * @Date:       2013-09-08 16:55:23 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -376,7 +376,7 @@ class Todb
           $col_keys = array($select['column']);
         }
         list($first_record) = array_slice($records, 0, 1);
-        if ( count($col_keys) < 1 ) {
+        if ( empty($col_keys) ) {
           $col_keys = $headers;
         }
         $result = array_fill_keys($col_keys, NULL);
@@ -434,7 +434,7 @@ class Todb
             }
           }
         }
-        if ( count($selected_records) > 0 ) {
+        if ( !empty($selected_records) ) {
           $this->_SortRecords($selected_records, $select['order']);
           $this->_SetColumn($selected_records, $select['column'], $select['key']);
         }
@@ -464,11 +464,11 @@ class Todb
           $records_cnt = $total;
           $deleted_records = array_splice($records, 0);
         }
-        if ( count($deleted_records) > 0 ) {
+        if ( !empty($deleted_records) ) {
           $this->_SortRecords($deleted_records, $select['order']);
           $this->_SetColumn($deleted_records, $select['column'], $select['key']);
         }
-        if ( count($records) < 1 ) {
+        if ( empty($records) ) {
           $this->_ClearMaximum($tname);
         }
         return $to_return_records ? $deleted_records : $records_cnt;
@@ -822,7 +822,7 @@ EOT;
   }
   private function _SetColumn(&$records, $columnKeys, $indexKey)
   {
-    if ( count($records) < 1 ) {
+    if ( empty($records) ) {
       return;
     }
     if ( is_string($columnKeys) ) {
@@ -870,7 +870,7 @@ EOT;
   }
   private function _SortUniqueValues(&$array, $sortFlags)
   {
-    if ( is_null($sortFlags) ) {
+    if ( is_null($sortFlags) or empty($array) ) {
       return;
     }
     foreach ( $sortFlags as $key => $flag ) {
@@ -883,14 +883,14 @@ EOT;
   }
   private function _SortRecords(&$records, $sortFlags)
   {
-    if ( count($records) < 1 or is_null($sortFlags) ) {
+    if ( empty($records) or is_null($sortFlags) ) {
       return;
     }
     list($first_record) = array_slice($records, 0, 1);
     $array_keys = array_keys($first_record);
     $sort_flags = array_intersect_key($sortFlags, array_flip($array_keys));
     $sort_keys = array_keys($sort_flags);
-    if ( count($sort_flags) < 1 ) {
+    if ( empty($sort_flags) ) {
       return;
     }
     $columns = array();
@@ -950,7 +950,7 @@ EOT;
   }
   private function _IsValidHeaders($headers)
   {
-    if ( !is_array($headers) or count($headers) < 1 ) {
+    if ( !is_array($headers) or empty($headers) ) {
       return FALSE;
     }
     foreach ( $headers as $header ) {
@@ -1016,7 +1016,7 @@ EOT;
       @flock($fh_col, LOCK_UN);
       @fclose($fh_col);
       $headers = unserialize($cts_col);
-      if ( FALSE === $headers or !is_array($headers) or count($headers) < 1 ) {
+      if ( FALSE === $headers or !is_array($headers) or empty($headers) ) {
         $this->_Error('FILE_ERROR', 'Broken data');
       }
       $this->_cache[$tname . '.col'] = $headers;
