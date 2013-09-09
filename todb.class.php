@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9
+ * @Version:    0.9.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-08 16:55:23 +08:00
+ * @Date:       2013-09-09 20:15:57 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -12,9 +12,12 @@
 \******************************************************************************/
 
 
+/**
+* @info   A plain text database manager.
+*/
 class Todb
 {
-  const VERSION = '0.9';
+  const VERSION = '0.9.1';
   /**
   * @info   Database directory
   * @type   string
@@ -48,6 +51,7 @@ class Todb
   */
   public function __construct()
   {
+    // store original value
     $this->_error_reporting_level = @error_reporting();
   }
 
@@ -94,7 +98,9 @@ class Todb
     if ( $this->_is_connected ) {
       $this->_Error('OPERATION_ERROR', 'Not disconnected from previous database');
     }
-    if ( FALSE === ($realpath = realpath(dirname($path . '/.'))) ) {
+    if ( FALSE === ($realpath = realpath(dirname($path . '/.')))
+      or !is_dir($realpath) )
+    {
       $this->_Error('FILE_ERROR', 'Database not found');
     }
     $this->_db_path = $realpath;
@@ -117,8 +123,7 @@ class Todb
   * @info   Return names of all table in the database if $tname isn't {String}
   *         or to see if table $tname exists
   * @param  {String}  $tname: (optional) table name to find
-  * @return {Array}
-  *         {Boolean}
+  * @return {Mixed}
   */
   public function ListTables($tname = NULL)
   {
@@ -148,7 +153,7 @@ class Todb
   * @info   Create table
   * @param  {String}  $tname: name of table
   * @param  {Array}   $headers: names of headers
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @return void
   */
   public function CreateTable($tname, $headers)
   {
@@ -163,18 +168,18 @@ class Todb
     );
     $this->_NeedValidTable($tdata);
     $this->_FormatHeaders($tdata);
-    return $this->_WriteTable($tname, $tdata, FALSE, FALSE);
+    $this->_WriteTable($tname, $tdata, FALSE, FALSE);
   }
   /**
   * @info   Delete table
   * @param  {String}  $tname: name of table
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @return void
   */
   public function DropTable($tname)
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
-    return $this->_UnlinkTable($tname);
+    $this->_UnlinkTable($tname);
   }
   /**
   * @info   Get headers of specified table
@@ -207,7 +212,7 @@ class Todb
   {
     // positions of $fromFile and $where can be swapped
     // if there are only two arguments
-    if ( func_num_args() === 2 and !is_callable($where) ) {
+    if ( func_num_args() === 2 and is_bool($where) ) {
       $fromFile = $where;
       $where = NULL;
     }
@@ -221,13 +226,19 @@ class Todb
   *         Alias for simple use of Select()
   *         Return NULL or array of NULLs if no value found
   * @param  {String}  $tname: name of specified table
-  * @param  {String}  $column: specified header of a record
-  *         {Array}   $column: specified headers of a record
+  * @param  {String}  $column: (optional) specified header of a record
+  *         {Array}   $column: (optional) specified headers of a record
   * @param  {Boolean} $fromFile: (optional) from the file or the working table
   * @return {Mixed}
   */
-  public function Max($tname, $column, $fromFile = FALSE)
+  public function Max($tname, $column = NULL, $fromFile = FALSE)
   {
+    // positions of $fromFile and $column can be swapped
+    // if there are only two arguments
+    if ( func_num_args() === 2 and is_bool($column) ) {
+      $fromFile = $column;
+      $column = NULL;
+    }
     return $this->Select($tname, array(
       'action' => 'MAX',
       'column' => $column
@@ -238,13 +249,19 @@ class Todb
   *         Alias for simple use of Select()
   *         Return NULL or array of NULLs if no value found
   * @param  {String}  $tname: name of specified table
-  * @param  {String}  $column: specified header of a record
-  *         {Array}   $column: specified headers of a record
+  * @param  {String}  $column: (optional) specified header of a record
+  *         {Array}   $column: (optional) specified headers of a record
   * @param  {Boolean} $fromFile: (optional) from the file or the working table
   * @return {Mixed}
   */
-  public function Min($tname, $column, $fromFile = FALSE)
+  public function Min($tname, $column = NULL, $fromFile = FALSE)
   {
+    // positions of $fromFile and $column can be swapped
+    // if there are only two arguments
+    if ( func_num_args() === 2 and is_bool($column) ) {
+      $fromFile = $column;
+      $column = NULL;
+    }
     return $this->Select($tname, array(
       'action' => 'MIN',
       'column' => $column
@@ -255,13 +272,19 @@ class Todb
   *         Alias for simple use of Select()
   *         Return array of or array of array
   * @param  {String}  $tname: name of specified table
-  * @param  {String}  $column: specified header of a record
-  *         {Array}   $column: specified headers of a record
+  * @param  {String}  $column: (optional) specified header of a record
+  *         {Array}   $column: (optional) specified headers of a record
   * @param  {Boolean} $fromFile: (optional) from the file or the working table
   * @return {Array}
   */
-  public function Unique($tname, $column, $fromFile = FALSE)
+  public function Unique($tname, $column = NULL, $fromFile = FALSE)
   {
+    // positions of $fromFile and $column can be swapped
+    // if there are only two arguments
+    if ( func_num_args() === 2 and is_bool($column) ) {
+      $fromFile = $column;
+      $column = NULL;
+    }
     return $this->Select($tname, array(
       'action' => 'UNI',
       'column' => $column
@@ -295,9 +318,7 @@ class Todb
     $this->_NeedValidName($tname);
     // positions of $fromFile and $where can be swapped
     // if there are only two arguments
-    if ( func_num_args() === 2
-      and !(is_null($select) or is_array($select)) )
-    {
+    if ( func_num_args() === 2 and is_bool($select) ) {
       $fromFile = $select;
       $select = NULL;
     }
@@ -586,7 +607,7 @@ class Todb
   * @param  {String}  $tname: name of specified table
   * @param  {Array}   $records: record(s) to append
   * @param  {Boolean} $isOneRecord: just one record?
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @return void
   */
   public function Append($tname, $records, $isOneRecord = FALSE)
   {
@@ -612,7 +633,7 @@ class Todb
       }
     }
     $this->_FormatRecordValues($header_names, $records);
-    return $this->_WriteTable($tname, array(
+    $this->_WriteTable($tname, array(
       'headers' => $cached_headers,
       'records' => $records
     ), TRUE, FALSE);
@@ -657,19 +678,19 @@ class Todb
   /**
   * @info   Write a working table to the database.
   * @param  {String}  $tname: name of specified table
-  * @return {Boolean} TRUE for success, or FALSE for failure
+  * @return void
   */
   public function Update($tname)
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
     if ( !is_array($this->_tables[$tname . '.row']) ) {
-      return TRUE;
+      return;
     }
     if ( !is_array($this->_tables[$tname . '.col']) ) {
       $this->_NeedFragmentLoaded($tname, TRUE);
     }
-    return $this->_WriteTable($tname, array(
+    $this->_WriteTable($tname, array(
       'headers' => $this->_tables[$tname . '.col'],
       'records' => $this->_tables[$tname . '.row']
     ), FALSE, TRUE);
@@ -834,7 +855,7 @@ EOT;
       return;
     }
     list($first_record) = array_slice($records, 0, 1);
-    $array_keys = array_keys($first_record); // even if $first_record is empty
+    $array_keys = array_keys($first_record);
     $column_keys = $columnKeys ?: array_diff($array_keys, array($indexKey));
     if ( $has_index_key ) {
       $key_column_values = array();
@@ -1090,27 +1111,26 @@ EOT;
   }
   private function _WriteTable($tname, $tdata, $toAppend, $toOverwrite)
   {
-    // can't be both true
     if ( $toAppend and $toOverwrite ) {
-      return FALSE;
+      $this->_Error('SYNTAX_ERROR', 'Unknown error');
     }
     $filename = $this->_GetSecureFileName($tname);
     if ( !($toOverwrite or $toAppend)
       and (is_file($filename . '.col') || is_file($filename . '.row')) )
     {
-      return FALSE;
+      $this->_Error('OPERATION_ERROR', 'Table already existed');
     }
     if ( $toOverwrite || $toAppend
       and (!is_writable($filename . '.col')
         or !is_writable($filename . '.row')) )
     {
-      return FALSE;
+      $this->_Error('FILE_ERROR', 'Data files not writable');
     }
     @ignore_user_abort(TRUE);
     // write headers
     if ( FALSE === @file_put_contents($filename . '.col', serialize($tdata['headers']), LOCK_EX) )
     {
-      return FALSE;
+      $this->_Error('FILE_ERROR', 'Fail to write data files');
     }
     $this->_cache[$tname . '.col'] = $tdata['headers'];
     // write records
@@ -1118,7 +1138,7 @@ EOT;
     if ( FALSE === @flock($fh_row, LOCK_EX) ) {
       @fclose($fh_row);
       @ignore_user_abort(FALSE);
-      return FALSE;
+      $this->_Error('FILE_ERROR', 'Fail to write data files');
     }
     $lines = array();
     foreach ( $tdata['records'] as $record ) {
@@ -1132,26 +1152,24 @@ EOT;
     if ( FALSE === @file_put_contents($filename . '.row', $lines, $write_mode) )
     {
       @ignore_user_abort(FALSE);
-      return FALSE;
+      $this->_Error('FILE_ERROR', 'Fail to write data files');
     }
     @ignore_user_abort(FALSE);
     if ( $toOverwrite ) {
       $this->_cache[$tname . '.col'] = $tdata['headers'];
       $this->_cache[$tname . '.row'] = $tdata['records'];
     }
-    return TRUE;
   }
   private function _UnlinkTable($tname)
   {
     $filename = $this->_GetSecureFileName($tname);
-    if ( !(is_file($filename . '.col') or is_file($filename . '.row')) ) {
-      return FALSE;
+    if ( !(is_file($filename . '.col') and is_file($filename . '.row')) ) {
+      $this->_Error('FILE_ERROR', 'Table not existed');
     }
-    if ( !@unlink($filename . '.col') and !@unlink($filename . '.row') ) {
-      return FALSE;
+    if ( !(@unlink($filename . '.col') and @unlink($filename . '.row')) ) {
+      $this->_Error('FILE_ERROR', 'Fail to delete data files');
     }
     $this->EmptyCache($tname);
-    return TRUE;
   }
 }
 ?>

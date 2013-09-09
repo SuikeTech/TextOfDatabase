@@ -11,5 +11,4 @@ Compatible with PHP/5.3.2 or higher version of PHP on Unix server
 
 ## TODO ##
 
-- Full comments for codes
 - Full documentation
