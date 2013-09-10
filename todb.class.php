@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.9.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-09 20:15:57 +08:00
+ * @Date:       2013-09-10 15:44:43 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -316,7 +316,7 @@ class Todb
   {
     $this->_NeedConnected();
     $this->_NeedValidName($tname);
-    // positions of $fromFile and $where can be swapped
+    // positions of $fromFile and $select can be swapped
     // if there are only two arguments
     if ( func_num_args() === 2 and is_bool($select) ) {
       $fromFile = $select;
