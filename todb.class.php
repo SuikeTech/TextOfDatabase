@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.9.1
  * @Name:       TextOfDatabase
- * @Date:       2013-09-10 15:44:43 +08:00
+ * @Date:       2013-09-12 17:03:16 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -1033,7 +1033,7 @@ EOT;
       @fclose($fh_col);
       return FALSE;
     } else {
-      $cts_col = @file_get_contents($filename . '.col');
+      $cts_col = @file_get_contents($filename . '.col', FALSE, NULL);
       @flock($fh_col, LOCK_UN);
       @fclose($fh_col);
       $headers = unserialize($cts_col);
