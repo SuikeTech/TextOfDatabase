@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.1
+ * @Version:    0.9.2
  * @Name:       TextOfDatabase
- * @Date:       2013-09-12 17:03:16 +08:00
+ * @Date:       2013-09-16 19:58:55 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -438,7 +438,7 @@ class Todb
             }
           }
         }
-        return $to_single_value ? array_values($result)[0] : $result;
+        return $to_single_value ? array_shift($result) : $result;
 
       case 'SET+':
         $to_return_records = TRUE;
@@ -516,7 +516,7 @@ class Todb
           $result[$key] = array_unique($result[$key], SORT_REGULAR);
         }
         $this->_SortUniqueValues($result, $select['order']);
-        return $to_single_value ? array_values($result)[0] : $result;
+        return $to_single_value ? array_shift($result) : $result;
 
       default:
         $this->_Error('SYNTAX_ERROR', 'Unknown error');
