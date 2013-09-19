@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.2
+ * @Version:    0.9.3
  * @Name:       TextOfDatabase
- * @Date:       2013-09-17 20:04:19 +08:00
+ * @Date:       2013-09-19 14:10:46 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.2';
+  const VERSION = '0.9.3';
   /**
   * @info   Database directory
   * @type   string
@@ -467,30 +467,32 @@ class Todb
       case 'DEL':
         $records_cnt = 0;
         $deleted_records = array();
-        if ( is_callable($where) ) {
-          for ( list($i, $m) = $range; $i < $m; $i++ ) {
-            if ( $where($records[$i]) ) {
-              if ( $to_return_records ) {
-                $deleted_records[] = $records[$i];
-              } else {
-                $records_cnt++;
-              }
-              // indexes need re-mapping
-              unset($records[$i]);
+        for ( list($i, $m) = $range; $i < $m; $i++ ) {
+          if ( is_null($where) or $where($records[$i]) ) {
+            if ( $to_return_records ) {
+              $deleted_records[] = $records[$i];
+            } else {
+              $records_cnt++;
             }
+            // indexes need re-mapping
+            unset($records[$i]);
           }
-          // re-map indexes
-          array_splice($records, 0, 0);
-        } else {
-          $records_cnt = $total;
-          $deleted_records = array_splice($records, 0);
         }
+        // re-map indexes
+        array_splice($records, 0, 0);
         if ( !empty($deleted_records) ) {
           $this->_SortRecords($deleted_records, $select['order']);
           $this->_SetColumn($deleted_records, $select['column'], $select['key']);
         }
         if ( empty($records) ) {
           $this->_ClearMaximum($tname);
+        } else {
+          $tdata = array(
+            'headers' => $headers,
+            'records' => &$records
+          );
+          $this->_FormatHeaders($tdata);
+          $this->_tables[$tname . '.col'] = $tdata['headers'];
         }
         return $to_return_records ? $deleted_records : $records_cnt;
 
@@ -599,8 +601,8 @@ class Todb
     $this->_NeedValidTable($tdata);
     $this->_FormatHeaders($tdata);
     $this->_FormatRecordValues($header_names, $records);
-    $this->_tables[$tname . 'col'] = $tdata['headers'];
-    $this->_tables[$tname . 'row'] = $records;
+    $this->_tables[$tname . '.col'] = $tdata['headers'];
+    $this->_tables[$tname . '.row'] = $records;
   }
   /**
   * @info   Append record(s) directly to a table file
