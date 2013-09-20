@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.3
+ * @Version:    0.9.4
  * @Name:       TextOfDatabase
- * @Date:       2013-09-19 14:10:46 +08:00
+ * @Date:       2013-09-20 09:21:40 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.3';
+  const VERSION = '0.9.4';
   /**
   * @info   Database directory
   * @type   string
@@ -135,10 +135,10 @@ class Todb
     while ( FALSE !== ($fname = readdir($dh)) ) {
       if ( is_file($this->_db_path . '/' . $fname) ) {
         $info = pathinfo($fname);
-        if ( 'col' === $info['extension'] ) {
-          if ( is_file($this->_db_path . '/' . $info['filename'] . '.row') ) {
-            $tables[] = $info['filename'];
-          }
+        if ( 'col' === $info['extension']
+          and is_file($this->_db_path . '/' . $info['filename'] . '.row') )
+        {
+          $tables[] = $info['filename'];
         }
       }
     }
@@ -407,7 +407,6 @@ class Todb
         if ( $to_find_maximum ) {
           if ( is_null($where) and $range[0] === 0 and $range[1] === $total ) {
             if ( !$fromFile ) {
-              $this->_NeedFragmentLoaded($tname, TRUE);
               $maximums = $this->_tables[$tname . '.col'];
             } else {
               $maximums = $this->_cache[$tname . '.col'];
