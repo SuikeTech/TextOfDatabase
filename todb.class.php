@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.6
+ * @Version:    0.9.7
  * @Name:       TextOfDatabase
- * @Date:       2013-09-23 02:41:14 +08:00
+ * @Date:       2013-09-23 03:50:28 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.6';
+  const VERSION = '0.9.7';
   /**
   * @info   Database directory
   * @type   string
@@ -167,7 +167,7 @@ class Todb
       'records' => array()
     );
     $this->_NeedValidTable($tdata);
-    $this->_FormatHeaders($tdata);
+    $this->_FormatHeaders($tdata, TRUE);
     $this->_WriteTable($tname, $tdata, FALSE, FALSE);
   }
   /**
@@ -485,12 +485,12 @@ class Todb
         }
         if ( empty($records) ) {
           $this->_ClearMaximum($tname);
-        } else {
+        } else if ( $records_cnt > 0 or !empty($deleted_records) ) {
           $tdata = array(
             'headers' => $headers,
             'records' => &$records
           );
-          $this->_FormatHeaders($tdata);
+          $this->_FormatHeaders($tdata, FALSE);
           $this->_tables[$tname . '.col'] = $tdata['headers'];
         }
         return $to_return_records ? $deleted_records : $records_cnt;
@@ -598,7 +598,7 @@ class Todb
       'records' => $records
     );
     $this->_NeedValidTable($tdata);
-    $this->_FormatHeaders($tdata);
+    $this->_FormatHeaders($tdata, FALSE);
     $this->_FormatRecordValues($header_names, $records);
     $this->_tables[$tname . '.col'] = $tdata['headers'];
     $this->_tables[$tname . '.row'] = $records;
@@ -627,7 +627,7 @@ class Todb
       'records' => $records
     );
     $this->_NeedValidTable($tdata);
-    $this->_FormatHeaders($tdata);
+    $this->_FormatHeaders($tdata, FALSE);
     foreach ( $tdata['headers'] as $name => $maximum ) {
       if ( $cached_headers[$name] < $maximum ) {
         $cached_headers[$name] = $maximum;
@@ -953,18 +953,30 @@ EOT;
       $val = str_replace("\x00", '', $val);
     }
   }
-  private function _FormatHeaders(&$tdata)
+  private function _FormatHeaders(&$tdata, $isNumericIndexed)
   {
     $headers = $tdata['headers'];
-    $indexes = array_flip($headers);
     $header_maximums = array();
     list($first_record) = array_slice($tdata['records'], 0, 1);
-    foreach ( $headers as $header ) {
-      $header_maximums[$header] = $first_record[$indexes[$header]];
-      foreach ( $tdata['records'] as $record ) {
-        $value = $record[$indexes[$header]];
-        if ( $header_maximums[$header] < $value ) {
-          $header_maximums[$header] = $value;
+    if ( $isNumericIndexed ) {
+      $indexes = array_flip($headers);
+      foreach ( $headers as $header ) {
+        $header_maximums[$header] = $first_record[$indexes[$header]];
+        foreach ( $tdata['records'] as $record ) {
+          $value = $record[$indexes[$header]];
+          if ( $header_maximums[$header] < $value ) {
+            $header_maximums[$header] = $value;
+          }
+        }
+      }
+    } else {
+      foreach ( $headers as $header ) {
+        $header_maximums[$header] = $first_record[$header];
+        foreach ( $tdata['records'] as $record ) {
+          $value = $record[$header];
+          if ( $header_maximums[$header] < $value ) {
+            $header_maximums[$header] = $value;
+          }
         }
       }
     }
