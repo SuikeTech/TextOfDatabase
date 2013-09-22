@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.7
+ * @Version:    0.9.8
  * @Name:       TextOfDatabase
- * @Date:       2013-09-23 03:50:28 +08:00
+ * @Date:       2013-09-23 05:10:30 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.7';
+  const VERSION = '0.9.8';
   /**
   * @info   Database directory
   * @type   string
@@ -457,6 +457,14 @@ class Todb
         if ( !empty($selected_records) ) {
           $this->_SortRecords($selected_records, $select['order']);
           $this->_SetColumn($selected_records, $select['column'], $select['key']);
+        }
+        if ( $records_cnt > 0 or !empty($selected_records) ) {
+          $tdata = array(
+            'headers' => $headers,
+            'records' => &$records
+          );
+          $this->_FormatHeaders($tdata, FALSE);
+          $this->_tables[$tname . '.col'] = $tdata['headers'];
         }
         return $to_return_records ? $selected_records : $records_cnt;
 
