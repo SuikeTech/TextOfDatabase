@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.5
+ * @Version:    0.9.6
  * @Name:       TextOfDatabase
- * @Date:       2013-09-23 00:23:35 +08:00
+ * @Date:       2013-09-23 02:41:14 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.5';
+  const VERSION = '0.9.6';
   /**
   * @info   Database directory
   * @type   string
@@ -960,7 +960,7 @@ EOT;
     $header_maximums = array();
     list($first_record) = array_slice($tdata['records'], 0, 1);
     foreach ( $headers as $header ) {
-      $header_maximums[$header] = $first_record[$header];
+      $header_maximums[$header] = $first_record[$indexes[$header]];
       foreach ( $tdata['records'] as $record ) {
         $value = $record[$indexes[$header]];
         if ( $header_maximums[$header] < $value ) {
