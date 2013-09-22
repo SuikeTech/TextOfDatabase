@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.4
+ * @Version:    0.9.5
  * @Name:       TextOfDatabase
- * @Date:       2013-09-20 09:21:40 +08:00
+ * @Date:       2013-09-23 00:23:35 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.4';
+  const VERSION = '0.9.5';
   /**
   * @info   Database directory
   * @type   string
@@ -541,9 +541,9 @@ class Todb
       'records' => array($record)
     );
     $this->_NeedValidTable($tdata);
-    foreach ( $record as $header => $value ) {
-      if ( $cached_headers[$header] < $record[$header] ) {
-        $cached_headers[$header] = $record[$header];
+    foreach ( $record as $name => $value ) {
+      if ( $cached_headers[$name] < $value ) {
+        $cached_headers[$name] = $value;
       }
     }
     $records = array($record);
@@ -572,9 +572,9 @@ class Todb
     $index = $tname . '.row';
     foreach ( $records as $record ) {
       $this->_tables[$index][] = $record;
-      foreach ( $cached_headers as $header => $maximum ) {
-        if ( $maximum < $record[$header] ) {
-          $cached_headers[$header] = $record[$header];
+      foreach ( $cached_headers as $name => $maximum ) {
+        if ( $maximum < $record[$name] ) {
+          $cached_headers[$name] = $record[$name];
         }
       }
     }
@@ -628,9 +628,9 @@ class Todb
     );
     $this->_NeedValidTable($tdata);
     $this->_FormatHeaders($tdata);
-    foreach ( $tdata['headers'] as $header => $maximum ) {
-      if ( $cached_headers[$header] < $maximum ) {
-        $cached_headers[$header] = $maximum;
+    foreach ( $tdata['headers'] as $name => $maximum ) {
+      if ( $cached_headers[$name] < $maximum ) {
+        $cached_headers[$name] = $maximum;
       }
     }
     $this->_FormatRecordValues($header_names, $records);
