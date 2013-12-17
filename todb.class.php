@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.8
+ * @Version:    0.9.9
  * @Name:       TextOfDatabase
- * @Date:       2013-09-23 05:10:30 +08:00
+ * @Date:       2013-12-17 11:49:31 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -941,7 +941,8 @@ EOT;
   }
   private function _GetSecureFileName($name)
   {
-    if ( FALSE !== strpos('/' . $name, '/..') ) {
+    if ( FALSE !== strpos('/' . $name, '/..')
+      or FALSE !== strpos('/' . $name, '/\\.\\.') ) {
       $this->_Error('OPERATION_ERROR', 'Insecure file name');
     }
     return $this->_db_path . '/' . $name;
