@@ -1,8 +1,8 @@
 <?php
 /******************************************************************************\
- * @Version:    0.9.10
+ * @Version:    0.9.11
  * @Name:       TextOfDatabase
- * @Date:       2014-02-16 08:13:20 +08:00
+ * @Date:       2014-07-22 08:06:04 +08:00
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -348,14 +348,23 @@ class Todb
     $where = $select['where'];
     $total = count($records);
     // set up range, like array_slice's (offset, length)
-    $range = array();
-    $range[0] = $select['range'][0] % $total;
+    $range = array(
+        intval($select['range'][0]),
+        intval($select['range'][1]) ?: $total
+    );
     $range[0] = $range[0] < 0 ? $total + $range[0] : $range[0];
-    $range[1] = $select['range'][1] % $total ?: $total;
+    if ( $range[0] < 0 ) {
+        $range[0] = 0;
+    }
+    if ( $range[0] >= $total ) {
+        $range[0] = $total;
+    }
+    $range[1] = $range[1] < 0 ? $total + $range[1] + 1 : $range[0] + $range[1];
     if ( $range[1] < 0 ) {
-      $range[1] = $total + $range[1] + 1;
-    } else {
-      $range[1] = array_sum($range) > $total ? $total : array_sum($range);
+        $range[1] = 0;
+    }
+    if ( $range[1] > $total ) {
+      $range[1] = $total;
     }
 
     switch ( $select['action'] ) {
