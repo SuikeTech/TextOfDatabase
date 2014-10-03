@@ -2,7 +2,7 @@
 /******************************************************************************\
  * @Version:    0.9.11
  * @Name:       TextOfDatabase
- * @Date:       2014-07-22 08:06:04 +08:00
+ * @Date:       2014-10-03T23:28:45+0800
  * @File:       todb.class.php
  * @Author:     Jak Wings
  * @License:    <https://github.com/jakwings/TextOfDatabase/blob/master/LICENSE>
@@ -17,7 +17,7 @@
 */
 class Todb
 {
-  const VERSION = '0.9.10';
+  const VERSION = '0.9.11';
   /**
   * @info   Database directory
   * @type   string
